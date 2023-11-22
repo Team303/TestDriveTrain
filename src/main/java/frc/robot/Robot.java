@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -11,6 +12,7 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.RobotMap.ControllerConstants;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.Commands.PIDForwardCommand;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.RobotMap.DrivebaseConstants;
@@ -36,6 +38,20 @@ public class Robot extends TimedRobot {
 
 	/* RoboRio Sensors */
 	private static final AHRS navX = new AHRS();
+
+	public static enum SubstationFiducialID {
+		RED(5),
+		BLUE(4);
+
+		public final int fiducialId;
+
+		private SubstationFiducialID(int fiducialId) {
+			this.fiducialId = fiducialId;
+		}
+	}
+	public static final int ALLIANCE_SUBSTATION_ID = DriverStation.getAlliance() == Alliance.Blue
+			? SubstationFiducialID.RED.fiducialId
+			: SubstationFiducialID.BLUE.fiducialId;
 
 	public static AHRS getNavX() {
 		return navX;

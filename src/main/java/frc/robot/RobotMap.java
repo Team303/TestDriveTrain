@@ -24,5 +24,12 @@ public final class RobotMap {
 		public static final int RIGHT_CONT_ID = 1;
 	}
 
+	public static final class PhotonvisionConstants {
+		public static final double CAMERA_HEIGHT_METERS = 0.1778; // NOT FINAL
+		public static final double GRID_TARGET_HEIGHT_METERS = 0.36;
+		public static final double DOUBLE_SUBSTATION_TARGET_HEIGHT_METERS = 0.59;
+		public static final double CAMERA_PITCH_RADIANS = 0; // NOT FINAL
+	}
+
 
 }
