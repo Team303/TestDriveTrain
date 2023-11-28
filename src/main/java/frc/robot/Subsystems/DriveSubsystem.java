@@ -8,11 +8,14 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import frc.robot.RobotMap.DrivebaseConstants;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -41,7 +44,20 @@ public class DriveSubsystem extends SubsystemBase{
     private final CANSparkMax m_backRightMotor;
     private final MotorController leftSideGroup;
     private final MotorController rightSideGroup;
+    private final ShuffleboardTab DBSTab = Shuffleboard.getTab("Drive Base Subsystem");
+    private final GenericEntry setpoint;
+    private final GenericEntry output;
+    private final GenericEntry error;
+    private final GenericEntry angle;
+    private final GenericEntry velocity;
+    private final RelativeEncoder left;
+    private final RelativeEncoder right;
+    public static final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(0.635);
+    private final DifferentialDriveOdometry dDriveOdometry; 
     private final DifferentialDrive drive;
+
+    private Pose2d pose; 
+
 
     public DifferentialDrive getDrive() {
         return drive;
@@ -67,11 +83,28 @@ public class DriveSubsystem extends SubsystemBase{
         m_backLeftMotor.setInverted(true);
         m_backRightMotor.setInverted(true);
 
-         drive = new DifferentialDrive(leftSideGroup, rightSideGroup);
+        drive = new DifferentialDrive(leftSideGroup, rightSideGroup);
+            
+        right = m_frontRightMotor.getEncoder();
+        left = m_backLeftMotor.getEncoder();
+
+        right.setPositionConversionFactor(1/4.67);
+        left.setPositionConversionFactor(1/4.67);
+
+        dDriveOdometry = new DifferentialDriveOdometry(new Rotation2d(Robot.getNavX().getAngle()),
+        left.getPosition(), 
+        right.getPosition(), 
+        new Pose2d(0, 0, new Rotation2d()));
+
+        output = DBSTab.add("PID Output", 0).getEntry();
+        setpoint = DBSTab.add("PID Setpoint", 0).getEntry(); 
+        error = DBSTab.add("Error", 0).getEntry();
+        angle = DBSTab.add("Angle", 0).getEntry();
+        velocity = DBSTab.add("Velocity", 0).getEntry();
      }
 
 
-    public MotorController getLeftSideGroup() {
+     public MotorController getLeftSideGroup() {
         return leftSideGroup;
     }
 
@@ -83,6 +116,11 @@ public class DriveSubsystem extends SubsystemBase{
         getDrive().arcadeDrive(arcadeDriveSpeed, arcadeDriveRotations);
     }
 
+    public void drive(ChassisSpeeds chassisSpeeds) {
+        DifferentialDriveWheelSpeeds speeds = kinematics.toWheelSpeeds(chassisSpeeds);
+        tankDrive(speeds.leftMetersPerSecond/4, speeds.rightMetersPerSecond/4);
+    }
+
 
     public void tankDrive(double leftSpeed, double rightSpeed) {
         getDrive().tankDrive(leftSpeed, rightSpeed);
@@ -92,6 +130,51 @@ public class DriveSubsystem extends SubsystemBase{
         getDrive().curvatureDrive(xSpeed, zRotations, allowTurnInPlace);
     }
 
+    public Pose2d getPose() {
+        return pose;
+    }
+
+    public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+        return new DifferentialDriveWheelSpeeds(left.getVelocity(), right.getVelocity());
+    }
+
+    public ChassisSpeeds getCurrentSpeeds() {
+        return kinematics.toChassisSpeeds(getWheelSpeeds());
+    }
+    
     @Override
-    public void periodic() {}
+    public void periodic() {
+
+        Rotation2d gyroAngle = new Rotation2d(Math.toRadians(Robot.getNavX().getAngle()));
+
+        pose = dDriveOdometry.update(gyroAngle,
+        left.getPosition(),
+        right.getPosition());
+
+        Robot.logger.recordOutput("Odometry", pose);
+        
+        angle.setDouble(Robot.getNavX().getAngle());
+        
+        double velo = Math.sqrt(Math.pow(Robot.getNavX().getVelocityX(), 2) + Math.pow(Robot.getNavX().getVelocityZ(), 2));
+        if (velo > velocity.getDouble(velo)) {
+            velocity.setDouble(velo);
+        }
+
+    }
+
+    public void resetPose(Pose2d pose) {
+        dDriveOdometry.resetPosition(Robot.getNavX().getRotation2d(), left.getPosition(), right.getPosition(), new Pose2d());
+        Robot.getNavX().reset();
+    }
+
+    public void resetPose() {
+        dDriveOdometry.resetPosition(Robot.getNavX().getRotation2d(), left.getPosition(), right.getPosition(), new Pose2d());
+        Robot.getNavX().reset();
+    }
+
+    // public Command getPathFromFile(String pathName) {
+    //     PathPlannerTrajectory path = PathPlanner.loadPath("pathName", new PathConstraints(2, 2));
+        
+    //     return Robot.autoBuilder.followPathWithEvents(path);
+    // }
 }
