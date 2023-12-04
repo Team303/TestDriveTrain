@@ -21,6 +21,7 @@ import frc.robot.RobotMap.ControllerConstants;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.Commands.PIDForwardCommand;
+import frc.robot.Modules.PhotonvisionModule;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.RobotMap.DrivebaseConstants;
 import frc.robot.Subsystems.DriveSubsystem;
@@ -67,7 +68,7 @@ public class Robot extends LoggedRobot {
 	}
 
 	private static final DriveSubsystem tank = new DriveSubsystem();
-
+	public static final PhotonvisionModule photonvision = new PhotonvisionModule();
 	public static DriveSubsystem getDrivebase() {
 			return tank;
 	}
