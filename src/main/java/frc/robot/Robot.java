@@ -11,6 +11,7 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -45,9 +46,9 @@ public class Robot extends LoggedRobot {
 
 	/* RoboRio Sensors */
 	private static final AHRS navX = new AHRS();
-
+	public static final PhotonvisionModule photonvision = new PhotonvisionModule();
+	private static final DriveSubsystem tank = new DriveSubsystem();
 	public static final Logger logger = Logger.getInstance(); 
-
 
 	public static enum SubstationFiducialID {
 		RED(5),
@@ -67,8 +68,7 @@ public class Robot extends LoggedRobot {
 		return navX;
 	}
 
-	private static final DriveSubsystem tank = new DriveSubsystem();
-	public static final PhotonvisionModule photonvision = new PhotonvisionModule();
+
 	public static DriveSubsystem getDrivebase() {
 			return tank;
 	}
@@ -79,23 +79,55 @@ public class Robot extends LoggedRobot {
 		// We need to invert one side of the drivetrain so that positive voltages
 		// result in both sides moving forward. Depending on how your robot's
 		// gearbox is constructed, you might have to invert the left side instead.
+		Logger logger = Logger.getInstance();
+		navX.reset();
+		CameraServer.startAutomaticCapture();
+
+		// Record metadata
+		// logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
+		// logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
+		// logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
+		// logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
+		// logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
+		// switch (BuildConstants.DIRTY) {
+		// 	case 0:
+		// 		logger.recordMetadata("GitDirty", "All changes committed");
+		// 		break;
+		// 	case 1:
+		// 		logger.recordMetadata("GitDirty", "Uncomitted changes");
+		// 		break;
+		// 	default:
+		// 		logger.recordMetadata("GitDirty", "Unknown");
+		// 		break;
+		// }
+
+		// Set up data receivers & replay source
+		if (Robot.isReal()) {
+			// Running on a real robot, log to a USB stick
+			logger.addDataReceiver(new WPILOGWriter("/media/sda1/"));
+			logger.addDataReceiver(new NT4Publisher());
+		} else {
+			logger.addDataReceiver(new WPILOGWriter(""));
+			logger.addDataReceiver(new NT4Publisher());
+		}
+
 		tank.getLeftSideGroup().setInverted(true);
 
 		//Robot.XBOX_CONTROLLER.get
 
-		if(Robot.XBOX_CONTROLLER.getLeftBumper()) {
-			System.out.println("Pid mode");
-			Robot.getDrivebase().setDefaultCommand(new PIDForwardCommand(0.9, .05, 0));
-		}
-		else {
-			System.out.println("Normal mode");
-			//Robot.tank.setDefaultCommand(new DefaultDrive());
-			Robot.getDrivebase().setDefaultCommand(new PIDForwardCommand(0.9, .05, 0));
+		// if(Robot.XBOX_CONTROLLER.getLeftBumper()) {
+		// 	System.out.println("Pid mode");
+		// 	// Robot.getDrivebase().setDefaultCommand(new PIDForwardCommand(0.9, .05, 0));
+		// }
+		// else {
+		// 	System.out.println("Normal mode");
+		// 	//Robot.tank.setDefaultCommand(new DefaultDrive());
+		// 	Robot.getDrivebase().setDefaultCommand(new PIDForwardCommand(0.9, .05, 0));
 
-		}
-		
-		SmartDashboard.putBoolean("garmadon", Robot.XBOX_CONTROLLER.getLeftBumperPressed());
-
+		// }
+		// SmartDashboard.putBoolean("garmadon", Robot.XBOX_CONTROLLER.getLeftBumperPressed());
+		// Start Camera
+		logger.start();
 	}
 
   	@Override

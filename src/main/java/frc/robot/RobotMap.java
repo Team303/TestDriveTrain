@@ -30,6 +30,10 @@ public final class RobotMap {
 		public static final double DOUBLE_SUBSTATION_TARGET_HEIGHT_METERS = 0.59;
 		public static final double CAMERA_PITCH_RADIANS = 0; // NOT FINAL
 	}
+	public static final class DDrive {
+		public static final double STARTING_X=0;
+		public static final double STARTING_Y=0;
+	}
 
 
 }
