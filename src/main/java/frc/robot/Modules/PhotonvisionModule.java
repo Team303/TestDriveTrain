@@ -33,10 +33,10 @@ public class PhotonvisionModule extends SubsystemBase {
     public static final GenericEntry TARGET_SKEW = PHOTONVISION_TAB.add("ID Skew", 0).getEntry();
 
     private static PhotonCamera[] camera = {
-            new PhotonCamera("PhotonVision1"),
-            new PhotonCamera("PhotonVision2"),
-            new PhotonCamera("PhotonVision3"),
-            new PhotonCamera("PhotonVision4")
+            new PhotonCamera("PhotonVision1")
+            // new PhotonCamera("PhotonVision2"),
+            // new PhotonCamera("PhotonVision3"),
+            // new PhotonCamera("PhotonVision4")
     };
 
     // public static enum PhotonPipeline {
