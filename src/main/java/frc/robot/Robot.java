@@ -14,7 +14,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -84,22 +83,22 @@ public class Robot extends LoggedRobot {
 		CameraServer.startAutomaticCapture();
 
 		// Record metadata
-		// logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
-		// logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
-		// logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
-		// logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
-		// logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
-		// switch (BuildConstants.DIRTY) {
-		// 	case 0:
-		// 		logger.recordMetadata("GitDirty", "All changes committed");
-		// 		break;
-		// 	case 1:
-		// 		logger.recordMetadata("GitDirty", "Uncomitted changes");
-		// 		break;
-		// 	default:
-		// 		logger.recordMetadata("GitDirty", "Unknown");
-		// 		break;
-		// }
+		logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
+		logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
+		logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
+		logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
+		logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
+		switch (BuildConstants.DIRTY) {
+			case 0:
+				logger.recordMetadata("GitDirty", "All changes committed");
+				break;
+			case 1:
+				logger.recordMetadata("GitDirty", "Uncomitted changes");
+				break;
+			default:
+				logger.recordMetadata("GitDirty", "Unknown");
+				break;
+		}
 
 		// Set up data receivers & replay source
 		if (Robot.isReal()) {
@@ -112,6 +111,9 @@ public class Robot extends LoggedRobot {
 		}
 
 		tank.getLeftSideGroup().setInverted(true);
+
+
+		tank.setDefaultCommand(new DefaultDrive());
 
 		//Robot.XBOX_CONTROLLER.get
 

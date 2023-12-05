@@ -85,8 +85,8 @@ public class DriveSubsystem extends SubsystemBase{
 
     public final AprilTagFieldLayout aprilTagField;
     private final Field2d field2d = new Field2d();
-    private static final Vector<N3> differentialStandardDeviations = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(10));
-	private static final Vector<N3> photonStandardDeviations = VecBuilder.fill(0.25, 0.25, 0);
+    private static final Vector<N3> differentialStandardDeviations = VecBuilder.fill(0.5, 0.5, Math.toRadians(10));
+	private static final Vector<N3> photonStandardDeviations = VecBuilder.fill(0.25, 0.25, 1);
 
 	public PhotonPoseEstimator visionPoseEstimator;
 	public DifferentialDrivePoseEstimator poseEstimator;
@@ -222,24 +222,28 @@ public class DriveSubsystem extends SubsystemBase{
         pose = dDriveOdometry.update(gyroAngle,
         left.getPosition(),
         right.getPosition());
-        
-		Optional<EstimatedRobotPose> result = getEstimatedGlobalPose(poseEstimator.getEstimatedPosition());
-        
+
+		Optional<EstimatedRobotPose> result = getEstimatedGlobalPose(poseEstimator.getEstimatedPosition());        
 
 		if (result.isPresent()) {
 			EstimatedRobotPose visionPoseEstimate = result.get();
 			poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
 			visionPoseEstimate.timestampSeconds);
 		}
-		poseEstimator.update(
-		Rotation2d.fromDegrees(-Robot.getNavX().getAngle()),
-		left.getPosition(),
-        right.getPosition());
+
 
 		field2d.setRobotPose(getPose());
-        Robot.logger.recordOutput("Odometry", pose);
+        Robot.logger.recordOutput("Odometry", poseEstimator.getEstimatedPosition());
+
+        poseEstimator.update(
+            Rotation2d.fromDegrees(-Robot.getNavX().getAngle()),
+            left.getPosition(),
+            right.getPosition());
+
+        System.out.println(poseEstimator.getEstimatedPosition());
+
         if(result.isPresent()){
-        Robot.logger.recordOutput("Vision Estimate",result.get().estimatedPose.toPose2d());
+            Robot.logger.recordOutput("Vision Estimate",result.get().estimatedPose.toPose2d());
         }
 
         angle.setDouble(Robot.getNavX().getAngle());
