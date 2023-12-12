@@ -154,7 +154,7 @@ public class DriveSubsystem extends SubsystemBase{
 
 		aprilTagField = initialLayout;
         	if (Robot.isReal()) {
-			visionPoseEstimator = new PhotonPoseEstimator(aprilTagField, PoseStrategy.CLOSEST_TO_REFERENCE_POSE,
+			visionPoseEstimator = new PhotonPoseEstimator(aprilTagField, PoseStrategy.MULTI_TAG_PNP,
 					Robot.photonvision.getCamera(CameraName.CAM1),
 					new Transform3d(new Translation3d(), new Rotation3d()));
 		}
