@@ -16,6 +16,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import frc.robot.RobotMap.DDrive;
 import frc.robot.RobotMap.DrivebaseConstants;
+import frc.robot.RobotMap.PhotonvisionConstants;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -50,6 +51,7 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
+import frc.robot.RobotMap;
 import frc.robot.Modules.PhotonvisionModule.CameraName;
 import frc.robot.RobotMap.DrivebaseConstants;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -86,9 +88,10 @@ public class DriveSubsystem extends SubsystemBase{
     public final AprilTagFieldLayout aprilTagField;
     private final Field2d field2d = new Field2d();
     private static final Vector<N3> differentialStandardDeviations = VecBuilder.fill(0.5, 0.5, Math.toRadians(10));
-	private static final Vector<N3> photonStandardDeviations = VecBuilder.fill(0.25, 0.25, 1);
+	private static final Vector<N3> photonStandardDeviations = VecBuilder.fill(0.25, 0.25, 0);
 
-	public PhotonPoseEstimator visionPoseEstimator;
+	public PhotonPoseEstimator visionPoseEstimatorFront;
+    public PhotonPoseEstimator visionPoseEstimatorBack;
 	public DifferentialDrivePoseEstimator poseEstimator;
 
 
@@ -153,10 +156,16 @@ public class DriveSubsystem extends SubsystemBase{
 		}
 
 		aprilTagField = initialLayout;
-        	if (Robot.isReal()) {
-			visionPoseEstimator = new PhotonPoseEstimator(aprilTagField, PoseStrategy.MULTI_TAG_PNP,
+        if (Robot.isReal()) {
+			visionPoseEstimatorFront = new PhotonPoseEstimator(aprilTagField, PoseStrategy.MULTI_TAG_PNP,
 					Robot.photonvision.getCamera(CameraName.CAM1),
-					new Transform3d(new Translation3d(), new Rotation3d()));
+					PhotonvisionConstants.ROBOT_TO_FRONT_CAMERA);
+            visionPoseEstimatorBack = new PhotonPoseEstimator(aprilTagField, PoseStrategy.MULTI_TAG_PNP,
+					Robot.photonvision.getCamera(CameraName.CAM2),
+					PhotonvisionConstants.ROBOT_TO_BACK_CAMERA);
+            visionPoseEstimatorBack.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+            visionPoseEstimatorFront.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+
 		}
         poseEstimator = new DifferentialDrivePoseEstimator(
             kinematics,
@@ -196,9 +205,14 @@ public class DriveSubsystem extends SubsystemBase{
     public void curvatureDrive(double xSpeed, double zRotations, boolean allowTurnInPlace) {
         getDrive().curvatureDrive(xSpeed, zRotations, allowTurnInPlace);
     }
-    public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
-		visionPoseEstimator.setReferencePose(prevEstimatedRobotPose);
-		return visionPoseEstimator.update();
+    public Optional<EstimatedRobotPose> getEstimatedGlobalPoseFront(Pose2d prevEstimatedRobotPose) {
+		visionPoseEstimatorFront.setReferencePose(prevEstimatedRobotPose);
+		return visionPoseEstimatorFront.update();
+	}
+
+    public Optional<EstimatedRobotPose> getEstimatedGlobalPoseBack(Pose2d prevEstimatedRobotPose) {
+		visionPoseEstimatorBack.setReferencePose(prevEstimatedRobotPose);
+		return visionPoseEstimatorBack.update();
 	}
 
 
@@ -223,10 +237,17 @@ public class DriveSubsystem extends SubsystemBase{
         left.getPosition(),
         right.getPosition());
 
-		Optional<EstimatedRobotPose> result = getEstimatedGlobalPose(poseEstimator.getEstimatedPosition());        
+		Optional<EstimatedRobotPose> resultFront = getEstimatedGlobalPoseFront(poseEstimator.getEstimatedPosition());
+        Optional<EstimatedRobotPose> resultBack = getEstimatedGlobalPoseBack(poseEstimator.getEstimatedPosition());        
+      
 
-		if (result.isPresent()) {
-			EstimatedRobotPose visionPoseEstimate = result.get();
+		if (resultFront.isPresent()) {
+			EstimatedRobotPose visionPoseEstimate = resultFront.get();
+			poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
+			visionPoseEstimate.timestampSeconds);
+		}
+        if (resultBack.isPresent()) {
+			EstimatedRobotPose visionPoseEstimate = resultBack.get();
 			poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
 			visionPoseEstimate.timestampSeconds);
 		}
@@ -240,11 +261,11 @@ public class DriveSubsystem extends SubsystemBase{
             left.getPosition(),
             right.getPosition());
 
-        System.out.println(poseEstimator.getEstimatedPosition());
+        // System.out.println(poseEstimator.getEstimatedPosition());
 
-        if(result.isPresent()){
-            Robot.logger.recordOutput("Vision Estimate",result.get().estimatedPose.toPose2d());
-        }
+        // if(result.isPresent()){
+        //     Robot.logger.recordOutput("Vision Estimate",result.get().estimatedPose.toPose2d());
+        // }
 
         angle.setDouble(Robot.getNavX().getAngle());
         

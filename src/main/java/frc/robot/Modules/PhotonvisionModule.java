@@ -33,8 +33,8 @@ public class PhotonvisionModule extends SubsystemBase {
     public static final GenericEntry TARGET_SKEW = PHOTONVISION_TAB.add("ID Skew", 0).getEntry();
 
     private static PhotonCamera[] camera = {
-            new PhotonCamera("PhotonVision1"),
-            new PhotonCamera("PhotonVision2")
+            new PhotonCamera("android"),
+            new PhotonCamera("apple")
             // new PhotonCamera("PhotonVision3"),
             // new PhotonCamera("PhotonVision4")
     };
@@ -128,44 +128,58 @@ public class PhotonvisionModule extends SubsystemBase {
         return yaw;
     }
 
-    public double getDistanceToTarget() {
-        if (!hasTargets(CameraName.CAM1)) {
+
+    //TODO: Make it work for all cameras
+    public double getDistanceToTarget(CameraName camera) {
+        if (!hasTargets(camera)) {
             return Double.NaN;
         }
 
-        int id = getBestTarget(CameraName.CAM1).getFiducialId();
+        int id = getBestTarget(camera).getFiducialId();
         if (id != ALLIANCE_SUBSTATION_ID) {
             return PhotonUtils.calculateDistanceToTargetMeters(
-                    PhotonvisionConstants.CAMERA_HEIGHT_METERS,
+                    PhotonvisionConstants.FRONT_CAMERA_HEIGHT_METERS,
                     PhotonvisionConstants.GRID_TARGET_HEIGHT_METERS,
                     PhotonvisionConstants.CAMERA_PITCH_RADIANS,
-                    Units.degreesToRadians(getBestTarget(CameraName.CAM1).getPitch()));
+                    Units.degreesToRadians(getBestTarget(camera).getPitch()));
         } else {
             return PhotonUtils.calculateDistanceToTargetMeters(
-                    PhotonvisionConstants.CAMERA_HEIGHT_METERS,
+                    PhotonvisionConstants.FRONT_CAMERA_HEIGHT_METERS,
                     PhotonvisionConstants.DOUBLE_SUBSTATION_TARGET_HEIGHT_METERS,
                     PhotonvisionConstants.CAMERA_PITCH_RADIANS,
-                    Units.degreesToRadians(getBestTarget(CameraName.CAM1).getPitch()));
+                    Units.degreesToRadians(getBestTarget(camera).getPitch()));
         }
     }
 
     @Override
     public void periodic() {
 
-        PhotonTrackedTarget target = getBestTarget(CameraName.CAM1);
+        PhotonTrackedTarget targetFront = getBestTarget(CameraName.CAM1);
+        PhotonTrackedTarget targetBack = getBestTarget(CameraName.CAM2);
 
-        if (target == null)
+        if (targetFront == null){
             return;
-
-        if (target != null) {
+         } else  {
             // if (getPipeline(CameraName.CAM1) == PhotonPipeline.AprilTag) {
-                APRILTAG_ID.setInteger(target.getFiducialId());
+                APRILTAG_ID.setInteger(targetFront.getFiducialId());
             // }
 
-            TARGET_AMBIGUITY.setDouble(target.getPoseAmbiguity());
-            TARGET_YAW.setDouble(target.getYaw());
-            TARGET_PITCH.setDouble(target.getPitch());
-            TARGET_SKEW.setDouble(target.getSkew());
+            TARGET_AMBIGUITY.setDouble(targetFront.getPoseAmbiguity());
+            TARGET_YAW.setDouble(targetFront.getYaw());
+            TARGET_PITCH.setDouble(targetFront.getPitch());
+            TARGET_SKEW.setDouble(targetFront.getSkew());
+        }
+        if (targetBack == null){
+            return;
+         } else  {
+            // if (getPipeline(CameraName.CAM1) == PhotonPipeline.AprilTag) {
+                APRILTAG_ID.setInteger(targetBack.getFiducialId());
+            // }
+
+            TARGET_AMBIGUITY.setDouble(targetBack.getPoseAmbiguity());
+            TARGET_YAW.setDouble(targetBack.getYaw());
+            TARGET_PITCH.setDouble(targetBack.getPitch());
+            TARGET_SKEW.setDouble(targetBack.getSkew());
         }
     }
 }

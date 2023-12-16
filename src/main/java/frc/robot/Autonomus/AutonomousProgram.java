@@ -73,7 +73,7 @@ public class AutonomousProgram {
 		for (var auto : registry.values())
 			autoChooser.addOption(auto.getName(), auto);
 
-		System.out.println(registry);
+		// System.out.println(registry);
 
 		autoChooser.setDefaultOption(DO_NOTHING.getName(), DO_NOTHING);
 	}
