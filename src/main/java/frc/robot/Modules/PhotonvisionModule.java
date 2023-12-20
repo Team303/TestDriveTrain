@@ -26,17 +26,35 @@ public class PhotonvisionModule extends SubsystemBase {
 
     public static final NetworkTable photonvision = NetworkTableInstance.getDefault().getTable("PhotonVision");
 
-    public static final GenericEntry APRILTAG_ID = PHOTONVISION_TAB.add("April ID", 0).getEntry();
-    public static final GenericEntry TARGET_AMBIGUITY = PHOTONVISION_TAB.add("ID Ambiguity", 0).getEntry();
-    public static final GenericEntry TARGET_YAW = PHOTONVISION_TAB.add("ID Yaw", 0).getEntry();
-    public static final GenericEntry TARGET_PITCH = PHOTONVISION_TAB.add("ID Pitch", 0).getEntry();
-    public static final GenericEntry TARGET_SKEW = PHOTONVISION_TAB.add("ID Skew", 0).getEntry();
+    public static final GenericEntry FRONT_APRILTAG_ID = PHOTONVISION_TAB.add("Front April ID", 0).getEntry();
+    public static final GenericEntry FRONT_TARGET_AMBIGUITY = PHOTONVISION_TAB.add("Front ID Ambiguity", 0).getEntry();
+    public static final GenericEntry FRONT_TARGET_YAW = PHOTONVISION_TAB.add("Front ID Yaw", 0).getEntry();
+    public static final GenericEntry FRONT_TARGET_PITCH = PHOTONVISION_TAB.add("Front ID Pitch", 0).getEntry();
+    public static final GenericEntry FRONT_TARGET_SKEW = PHOTONVISION_TAB.add("Front ID Skew", 0).getEntry();
+ 
+    public static final GenericEntry BACK_APRILTAG_ID = PHOTONVISION_TAB.add("BACK April ID", 0).getEntry();
+    public static final GenericEntry BACK_TARGET_AMBIGUITY = PHOTONVISION_TAB.add("BACK ID Ambiguity", 0).getEntry();
+    public static final GenericEntry BACK_TARGET_YAW = PHOTONVISION_TAB.add("BACK ID Yaw", 0).getEntry();
+    public static final GenericEntry BACK_TARGET_PITCH = PHOTONVISION_TAB.add("BACK ID Pitch", 0).getEntry();
+    public static final GenericEntry BACK_TARGET_SKEW = PHOTONVISION_TAB.add("BACK ID Skew", 0).getEntry();
+
+    public static final GenericEntry LEFT_APRILTAG_ID = PHOTONVISION_TAB.add("LEFT April ID", 0).getEntry();
+    public static final GenericEntry LEFT_TARGET_AMBIGUITY = PHOTONVISION_TAB.add("LEFT ID Ambiguity", 0).getEntry();
+    public static final GenericEntry LEFT_TARGET_YAW = PHOTONVISION_TAB.add("LEFT ID Yaw", 0).getEntry();
+    public static final GenericEntry LEFT_TARGET_PITCH = PHOTONVISION_TAB.add("LEFT ID Pitch", 0).getEntry();
+    public static final GenericEntry LEFT_TARGET_SKEW = PHOTONVISION_TAB.add("LEFT ID Skew", 0).getEntry();
+
+    public static final GenericEntry RIGHT_APRILTAG_ID = PHOTONVISION_TAB.add("RIGHT April ID", 0).getEntry();
+    public static final GenericEntry RIGHT_TARGET_AMBIGUITY = PHOTONVISION_TAB.add("RIGHT ID Ambiguity", 0).getEntry();
+    public static final GenericEntry RIGHT_TARGET_YAW = PHOTONVISION_TAB.add("RIGHT ID Yaw", 0).getEntry();
+    public static final GenericEntry RIGHT_TARGET_PITCH = PHOTONVISION_TAB.add("RIGHT ID Pitch", 0).getEntry();
+    public static final GenericEntry RIGHT_TARGET_SKEW = PHOTONVISION_TAB.add("RIGHT ID Skew", 0).getEntry();
 
     private static PhotonCamera[] camera = {
             new PhotonCamera("android"),
-            new PhotonCamera("apple")
-            // new PhotonCamera("PhotonVision3"),
-            // new PhotonCamera("PhotonVision4")
+            new PhotonCamera("PhotonVision2"),
+            new PhotonCamera("apple"),
+            new PhotonCamera("PhotonVision4")
     };
 
     // public static enum PhotonPipeline {
@@ -47,7 +65,9 @@ public class PhotonvisionModule extends SubsystemBase {
 
     public static enum CameraName {
         CAM1,
-        CAM2
+        CAM2,
+        CAM3,
+        CAM4
     }
 
     // public static enum ConePosition {
@@ -155,31 +175,58 @@ public class PhotonvisionModule extends SubsystemBase {
     public void periodic() {
 
         PhotonTrackedTarget targetFront = getBestTarget(CameraName.CAM1);
-        PhotonTrackedTarget targetBack = getBestTarget(CameraName.CAM2);
+        PhotonTrackedTarget targetRight = getBestTarget(CameraName.CAM2);
+        PhotonTrackedTarget targetBack = getBestTarget(CameraName.CAM3);
+        PhotonTrackedTarget targetLeft = getBestTarget(CameraName.CAM4);
+
 
         if (targetFront == null){
             return;
          } else  {
             // if (getPipeline(CameraName.CAM1) == PhotonPipeline.AprilTag) {
-                APRILTAG_ID.setInteger(targetFront.getFiducialId());
+                FRONT_APRILTAG_ID.setInteger(targetFront.getFiducialId());
             // }
 
-            TARGET_AMBIGUITY.setDouble(targetFront.getPoseAmbiguity());
-            TARGET_YAW.setDouble(targetFront.getYaw());
-            TARGET_PITCH.setDouble(targetFront.getPitch());
-            TARGET_SKEW.setDouble(targetFront.getSkew());
+            FRONT_TARGET_AMBIGUITY.setDouble(targetFront.getPoseAmbiguity());
+            FRONT_TARGET_YAW.setDouble(targetFront.getYaw());
+            FRONT_TARGET_PITCH.setDouble(targetFront.getPitch());
+            FRONT_TARGET_SKEW.setDouble(targetFront.getSkew());
         }
         if (targetBack == null){
             return;
          } else  {
             // if (getPipeline(CameraName.CAM1) == PhotonPipeline.AprilTag) {
-                APRILTAG_ID.setInteger(targetBack.getFiducialId());
+                BACK_APRILTAG_ID.setInteger(targetBack.getFiducialId());
             // }
 
-            TARGET_AMBIGUITY.setDouble(targetBack.getPoseAmbiguity());
-            TARGET_YAW.setDouble(targetBack.getYaw());
-            TARGET_PITCH.setDouble(targetBack.getPitch());
-            TARGET_SKEW.setDouble(targetBack.getSkew());
+            BACK_TARGET_AMBIGUITY.setDouble(targetBack.getPoseAmbiguity());
+            BACK_TARGET_YAW.setDouble(targetBack.getYaw());
+            BACK_TARGET_PITCH.setDouble(targetBack.getPitch());
+            BACK_TARGET_SKEW.setDouble(targetBack.getSkew());
+        }
+        if (targetLeft == null){
+            return;
+         } else  {
+            // if (getPipeline(CameraName.CAM1) == PhotonPipeline.AprilTag) {
+                LEFT_APRILTAG_ID.setInteger(targetLeft.getFiducialId());
+            // }
+
+            LEFT_TARGET_AMBIGUITY.setDouble(targetLeft.getPoseAmbiguity());
+            LEFT_TARGET_YAW.setDouble(targetLeft.getYaw());
+            LEFT_TARGET_PITCH.setDouble(targetLeft.getPitch());
+            LEFT_TARGET_SKEW.setDouble(targetLeft.getSkew());
+        }
+        if (targetRight == null){
+            return;
+         } else  {
+            // if (getPipeline(CameraName.CAM1) == PhotonPipeline.AprilTag) {
+                RIGHT_APRILTAG_ID.setInteger(targetRight.getFiducialId());
+            // }
+
+            RIGHT_TARGET_AMBIGUITY.setDouble(targetRight.getPoseAmbiguity());
+            RIGHT_TARGET_YAW.setDouble(targetRight.getYaw());
+            RIGHT_TARGET_PITCH.setDouble(targetRight.getPitch());
+            RIGHT_TARGET_SKEW.setDouble(targetRight.getSkew());
         }
     }
 }
