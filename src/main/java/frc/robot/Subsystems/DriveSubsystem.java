@@ -277,7 +277,7 @@ public class DriveSubsystem extends SubsystemBase {
         }
 
         field2d.setRobotPose(getPose());
-        Robot.logger.recordOutput("Odometry", poseEstimator.getEstimatedPosition());
+        Robot.logger.recordOutput("Pose", poseEstimator.getEstimatedPosition());
 
         poseEstimator.update(
                 Rotation2d.fromDegrees(-Robot.getNavX().getAngle()),
