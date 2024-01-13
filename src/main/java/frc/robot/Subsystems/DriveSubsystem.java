@@ -80,14 +80,16 @@ public class DriveSubsystem extends SubsystemBase {
     private final GenericEntry velocity;
     private final RelativeEncoder left;
     private final RelativeEncoder right;
-    public static final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(0.635);
-    private final DifferentialDriveOdometry dDriveOdometry;
+    public static final DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(0.508);
+    // private final DifferentialDriveOdometry dDriveOdometry;
     private final DifferentialDrive drive;
 
     public final AprilTagFieldLayout aprilTagField;
     private final Field2d field2d = new Field2d();
-    private static final Vector<N3> differentialStandardDeviations = VecBuilder.fill(0.5, 0.5, Math.toRadians(10));
-    private static final Vector<N3> photonStandardDeviations = VecBuilder.fill(0.25, 0.25, 0);
+    private static final Vector<N3> differentialStandardDeviations = VecBuilder.fill(0,0, 0);
+    // private static final Vector<N3> photonStandardDeviations = VecBuilder.fill(0.25, 0.25, 0);
+    private static final Vector<N3> photonStandardDeviations = VecBuilder.fill(100000, 1000000, 1000000);
+
 
     public PhotonPoseEstimator visionPoseEstimatorFront;
     public PhotonPoseEstimator visionPoseEstimatorRight;
@@ -96,7 +98,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     public DifferentialDrivePoseEstimator poseEstimator;
 
-    private Pose2d pose = new Pose2d(DDrive.STARTING_X, DDrive.STARTING_Y, new Rotation2d());;
+    // private Pose2d pose = new Pose2d(DDrive.STARTING_X, DDrive.STARTING_Y, new Rotation2d());;
 
     public DifferentialDrive getDrive() {
         return drive;
@@ -120,19 +122,19 @@ public class DriveSubsystem extends SubsystemBase {
         m_frontRightMotor.setInverted(true);
         m_backLeftMotor.setInverted(true);
         m_backRightMotor.setInverted(true);
+        
 
         drive = new DifferentialDrive(leftSideGroup, rightSideGroup);
 
         right = m_frontRightMotor.getEncoder();
         left = m_backLeftMotor.getEncoder();
+        right.setPositionConversionFactor( 1/4.67);
+        left.setPositionConversionFactor( 1/4.67);
 
-        right.setPositionConversionFactor(1 / 4.67);
-        left.setPositionConversionFactor(1 / 4.67);
-
-        dDriveOdometry = new DifferentialDriveOdometry(new Rotation2d(Robot.getNavX().getAngle()),
-                left.getPosition(),
-                right.getPosition(),
-                new Pose2d(DDrive.STARTING_X, DDrive.STARTING_Y, new Rotation2d()));
+        // dDriveOdometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(Robot.getNavX().getAngle()),
+        //         left.getPosition(),
+        //         right.getPosition(),
+        //         new Pose2d(DDrive.STARTING_X, DDrive.STARTING_Y, new Rotation2d()));
 
         output = DBSTab.add("PID Output", 0).getEntry();
         setpoint = DBSTab.add("PID Setpoint", 0).getEntry();
@@ -176,10 +178,10 @@ public class DriveSubsystem extends SubsystemBase {
         }
         poseEstimator = new DifferentialDrivePoseEstimator(
                 kinematics,
-                new Rotation2d(),
-                0,
-                0,
-                pose,
+                Rotation2d.fromDegrees(Robot.getNavX().getAngle()),
+                left.getPosition(),
+                right.getPosition(),
+                new Pose2d(DDrive.STARTING_X, DDrive.STARTING_Y, new Rotation2d()),
                 differentialStandardDeviations,
                 photonStandardDeviations);
         DBSTab.add("Pose", toString()).withPosition(0, 0).withSize(2, 0);
@@ -229,7 +231,7 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public Pose2d getPose() {
-        return pose;
+        return poseEstimator.getEstimatedPosition();
     }
 
     public DifferentialDriveWheelSpeeds getWheelSpeeds() {
@@ -243,46 +245,45 @@ public class DriveSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
 
-        Rotation2d gyroAngle = new Rotation2d(Math.toRadians(Robot.getNavX().getAngle()));
-
-        pose = dDriveOdometry.update(gyroAngle,
-                left.getPosition(),
-                right.getPosition());
+        Rotation2d gyroAngle = Rotation2d.fromDegrees(Robot.getNavX().getAngle());
+        // pose = dDriveOdometry.update(gyroAngle,
+        //         left.getPosition(),
+        //         right.getPosition());
 
         Optional<EstimatedRobotPose> resultFront = getEstimatedGlobalPoseFront(poseEstimator.getEstimatedPosition());
         Optional<EstimatedRobotPose> resultBack = getEstimatedGlobalPoseBack(poseEstimator.getEstimatedPosition());
-        Optional<EstimatedRobotPose> resultRight = getEstimatedGlobalPoseBack(poseEstimator.getEstimatedPosition());
-        Optional<EstimatedRobotPose> resultLeft = getEstimatedGlobalPoseBack(poseEstimator.getEstimatedPosition());
+        Optional<EstimatedRobotPose> resultRight = getEstimatedGlobalPoseRight(poseEstimator.getEstimatedPosition());
+        Optional<EstimatedRobotPose> resultLeft = getEstimatedGlobalPoseLeft(poseEstimator.getEstimatedPosition());
 
 
-        if (resultFront.isPresent()) {
-            EstimatedRobotPose visionPoseEstimate = resultFront.get();
-            poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
-                    visionPoseEstimate.timestampSeconds);
-        }
-        if (resultRight.isPresent()) {
-            EstimatedRobotPose visionPoseEstimate = resultRight.get();
-            poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
-                    visionPoseEstimate.timestampSeconds);
-        }
-        if (resultBack.isPresent()) {
-            EstimatedRobotPose visionPoseEstimate = resultBack.get();
-            poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
-                    visionPoseEstimate.timestampSeconds);
-        }
-        if (resultLeft.isPresent()) {
-            EstimatedRobotPose visionPoseEstimate = resultLeft.get();
-            poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
-                    visionPoseEstimate.timestampSeconds);
-        }
+        // if (resultFront.isPresent()) {
+        //     EstimatedRobotPose visionPoseEstimate = resultFront.get();
+        //     poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
+        //             visionPoseEstimate.timestampSeconds);
+        // }
+        // if (resultRight.isPresent()) {
+        //     EstimatedRobotPose visionPoseEstimate = resultRight.get();
+        //     poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
+        //             visionPoseEstimate.timestampSeconds);
+        // }
+        // if (resultBack.isPresent()) {
+        //     EstimatedRobotPose visionPoseEstimate = resultBack.get();
+        //     poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
+        //             visionPoseEstimate.timestampSeconds);
+        // }
+        // if (resultLeft.isPresent()) {
+        //     EstimatedRobotPose visionPoseEstimate = resultLeft.get();
+        //     poseEstimator.addVisionMeasurement(visionPoseEstimate.estimatedPose.toPose2d(),
+        //             visionPoseEstimate.timestampSeconds);
+        // }
 
         field2d.setRobotPose(getPose());
-        Robot.logger.recordOutput("Pose", poseEstimator.getEstimatedPosition());
-
         poseEstimator.update(
-                Rotation2d.fromDegrees(-Robot.getNavX().getAngle()),
+                gyroAngle,
                 left.getPosition(),
                 right.getPosition());
+        Robot.logger.recordOutput("Pose", poseEstimator.getEstimatedPosition());
+
 
         // System.out.println(poseEstimator.getEstimatedPosition());
 
@@ -302,13 +303,13 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public void resetPose(Pose2d pose) {
-        dDriveOdometry.resetPosition(Robot.getNavX().getRotation2d(), left.getPosition(), right.getPosition(),
-                new Pose2d());
+        poseEstimator.resetPosition(Robot.getNavX().getRotation2d(), left.getPosition(), right.getPosition(),
+                pose);
         Robot.getNavX().reset();
     }
 
     public void resetPose() {
-        dDriveOdometry.resetPosition(Robot.getNavX().getRotation2d(), left.getPosition(), right.getPosition(),
+        poseEstimator.resetPosition(Robot.getNavX().getRotation2d(), left.getPosition(), right.getPosition(),
                 new Pose2d());
         Robot.getNavX().reset();
     }

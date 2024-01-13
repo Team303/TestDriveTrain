@@ -14,6 +14,6 @@ public class DefaultDrive extends CommandBase {
 	@Override
 	public void execute() {
 		// Drive based on the joystick's y position (forward and back on ours)
-		Robot.getDrivebase().tankDrive(-Robot.XBOX_CONTROLLER.getLeftY(), -Robot.XBOX_CONTROLLER.getRightY());
+		Robot.getDrivebase().arcadeDrive(-Robot.XBOX_CONTROLLER.getLeftY(),-Robot.XBOX_CONTROLLER.getRightY());
 	}
 }

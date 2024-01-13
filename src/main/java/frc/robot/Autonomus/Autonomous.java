@@ -7,20 +7,20 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.pathplanner.lib.PathConstraints;
-import com.pathplanner.lib.PathPlanner;
-import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.auto.PIDConstants;
-import com.pathplanner.lib.auto.RamseteAutoBuilder;
+// import com.pathplanner.lib.PathConstraints;
+// import com.pathplanner.lib.PathPlanner;
+// import com.pathplanner.lib.PathPlannerTrajectory;
+// import com.pathplanner.lib.auto.PIDConstants;
+// import com.pathplanner.lib.auto.RamseteAutoBuilder;
 import frc.robot.Robot;
 import frc.robot.Subsystems.DriveSubsystem;
 
-import org.json.simple.parser.JSONParser;
-import org.json.simple.JSONObject;
+// import org.json.simple.parser.JSONParser;
+// import org.json.simple.JSONObject;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import org.json.simple.JSONArray;
+// import org.json.simple.JSONArray;
 import java.io.FileReader;
-import org.json.simple.JSONArray;
+// import org.json.simple.JSONArray;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Subsystems.DriveSubsystem;
 import frc.robot.Robot;
@@ -50,7 +50,7 @@ import frc.robot.Robot;
 
 public class Autonomous {
 
-    private static RamseteAutoBuilder autoBuilder;
+    // private static RamseteAutoBuilder autoBuilder;
 
 
     public static void init() {
